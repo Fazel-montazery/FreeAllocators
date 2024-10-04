@@ -7,6 +7,7 @@ typedef unsigned char byte;
 // Arena structure
 struct Arena {
 	byte* buff;
+	size_t size; // offset without padding
 	size_t offset;
 	size_t capacity;
 };
@@ -32,7 +33,7 @@ static uintptr_t align_forward(uintptr_t ptr, size_t align)
 	uintptr_t p, a, modulo;
 
 	p = ptr;
-	a = (uintptr_t)align;
+	a = (uintptr_t) align;
 	modulo = p & (a - 1);
 
 	if (modulo != 0) {
@@ -42,10 +43,20 @@ static uintptr_t align_forward(uintptr_t ptr, size_t align)
 	return p;
 }
 
-static void* arena_alloc_align(struct Arena* arena, size_t size, size_t align) 
+struct Arena arena_create(byte* buffer, size_t size)
+{
+	return (struct Arena) {
+		.buff = buffer,
+		.size = 0,
+		.offset = 0,
+		.capacity = size
+	};
+}
+
+void* arena_allocate(struct Arena* arena, size_t size)
 {
 	uintptr_t curr_ptr = (uintptr_t) arena->buff + (uintptr_t) arena->offset;
-	uintptr_t offset = align_forward(curr_ptr, align);
+	uintptr_t offset = align_forward(curr_ptr, DEFAULT_ALIGNMENT);
 	offset -= (uintptr_t) arena->buff; // Change to relative offset
 
 	if (offset + size > arena->capacity) {
@@ -55,26 +66,14 @@ static void* arena_alloc_align(struct Arena* arena, size_t size, size_t align)
 
 	void *ptr = arena->buff + offset;
 	arena->offset = offset + size;
+	arena->size += size;
 
 	return ptr;
 }
 
-struct Arena arena_create(byte* buffer, size_t size)
-{
-	return (struct Arena) {
-		.buff = buffer,
-		.offset = 0,
-		.capacity = size
-	};
-}
-
-void* arena_allocate(struct Arena* arena, size_t size)
-{
-	return arena_alloc_align(arena, size, DEFAULT_ALIGNMENT);
-}
-
 void arena_flush(struct Arena* arena)
 {
+	arena->size = 0;
 	arena->offset = 0;
 }
 
