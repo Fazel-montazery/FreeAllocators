@@ -1,0 +1,11 @@
+# Ignore all executables
+*.exe
+*.com
+*.cmd
+*.bat
+*.dll
+*.so
+*.dylib
+*.a
+*.o
+*.out
