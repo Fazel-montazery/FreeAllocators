@@ -1,5 +1,7 @@
 #pragma once
 
+#include <stddef.h>
+
 typedef unsigned char byte;
 
 // Arena structure
@@ -16,5 +18,15 @@ void arena_flush(struct Arena* arena);
 
 // Api implementation
 #ifdef ARENA_ALLOC_IMPELEMENTATION
+
+struct Arena arena_create(byte* buffer, size_t size)
+{
+	return (struct Arena) {
+		.buff = buffer,
+		.offset = 0,
+		.capacity = size
+	};
+}
+
 
 #endif // ARENA_ALLOC_IMPELEMENTATION
