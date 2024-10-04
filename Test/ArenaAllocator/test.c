@@ -13,7 +13,6 @@ int main(int argc, char** argv)
 	byte* buffer = malloc(BUFF_SIZE);
 	assert(buffer != NULL);
 
-	
 	struct Arena arena = arena_create(buffer, BUFF_SIZE);
 	assert(arena.buff == buffer);
 	assert(arena.capacity == BUFF_SIZE);
