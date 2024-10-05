@@ -21,8 +21,21 @@ struct Stack stack_create(byte* buffer, int64_t size, bool initZero);
 // Api implementation
 #ifdef STACK_ALLOC_IMPELEMENTATION
 
+#include <string.h>
+
 #ifndef DEFAULT_ALIGNMENT
 #define DEFAULT_ALIGNMENT (2 * sizeof(void *))
 #endif
+
+struct Stack stack_create(byte* buffer, int64_t size, bool initZero)
+{
+	if (initZero) memset(buffer, 0, size);
+	return (struct Stack) {
+		.buff = buffer,
+		.size = 0,
+		.offset = 0,
+		.capacity = size
+	};
+}
 
 #endif // STACK_ALLOC_IMPELEMENTATION

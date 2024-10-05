@@ -15,6 +15,10 @@ int main(int argc, char** argv)
 	assert(buffer != NULL);
 
 	struct Stack stack = stack_create(buffer, BUFF_SIZE, false);
+	assert(stack.buff == buffer);
+	assert(stack.offset == 0);
+	assert(stack.capacity == BUFF_SIZE);
+	printf("Stack creation OK.\n");
 
 	printf("Everything OK.\n");
 
