@@ -1,20 +1,24 @@
 #pragma once
 
 #include <stddef.h>
+#include <stdbool.h>
+#include <stdint.h>
 
 typedef unsigned char byte;
 
 // Arena structure
 struct Arena {
 	byte* buff;
-	size_t size; // offset without padding
-	size_t offset;
-	size_t capacity;
+	int64_t size; // offset without padding
+	int64_t offset;
+	int64_t capacity;
 };
 
 // Api declaration
-struct Arena arena_create(byte* buffer, size_t size);
-void* arena_allocate(struct Arena* arena, size_t size);
+struct Arena arena_create(byte* buffer, int64_t size, bool initZero);
+void arena_shrink(struct Arena* arena, int64_t amount); // Just shrinks the workable memory (not returning to OS)
+void arena_update_buffer(struct Arena* arena, byte* newBuffer, int64_t newSize, bool initZero);
+void* arena_allocate(struct Arena* arena, int64_t size);
 void arena_flush(struct Arena* arena);
 
 // Api implementation
@@ -25,10 +29,9 @@ void arena_flush(struct Arena* arena);
 #endif
 
 #include <stdio.h>
-#include <stdint.h>
-#include <stdbool.h>
+#include <string.h>
 
-static uintptr_t align_forward(uintptr_t ptr, size_t align) 
+static uintptr_t align_forward(uintptr_t ptr, int64_t align) 
 {
 	uintptr_t p, a, modulo;
 
@@ -43,8 +46,9 @@ static uintptr_t align_forward(uintptr_t ptr, size_t align)
 	return p;
 }
 
-struct Arena arena_create(byte* buffer, size_t size)
+struct Arena arena_create(byte* buffer, int64_t size, bool initZero)
 {
+	if (initZero) memset(buffer, 0, size);
 	return (struct Arena) {
 		.buff = buffer,
 		.size = 0,
@@ -53,7 +57,25 @@ struct Arena arena_create(byte* buffer, size_t size)
 	};
 }
 
-void* arena_allocate(struct Arena* arena, size_t size)
+void arena_shrink(struct Arena* arena, int64_t amount)
+{
+	if ((arena->capacity - amount) >= 0) {
+		arena->size = 0;
+		arena->offset = 0;
+		arena->capacity -= amount;
+	}
+}
+
+void arena_update_buffer(struct Arena* arena, byte* newBuffer, int64_t newSize, bool initZero)
+{
+	if (initZero) memset(newBuffer, 0, newSize);
+	arena->buff = newBuffer;
+	arena->capacity = newSize;
+	arena->size = 0;
+	arena->offset = 0;
+}
+
+void* arena_allocate(struct Arena* arena, int64_t size)
 {
 	uintptr_t curr_ptr = (uintptr_t) arena->buff + (uintptr_t) arena->offset;
 	uintptr_t offset = align_forward(curr_ptr, DEFAULT_ALIGNMENT);
