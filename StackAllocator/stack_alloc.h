@@ -22,6 +22,7 @@ struct Stack {
 
 // Api declaration
 struct Stack stack_create(byte* buffer, int64_t size, bool initZero);
+void stack_shrink(struct Stack* stack, int64_t amount);
 void* stack_allocate(struct Stack* stack, int64_t size);
 void stack_pop(struct Stack* stack);
 void stack_flush(struct Stack* stack);
@@ -65,6 +66,14 @@ struct Stack stack_create(byte* buffer, int64_t size, bool initZero)
 		.offset = 0,
 		.capacity = size
 	};
+}
+
+void stack_shrink(struct Stack* stack, int64_t amount)
+{
+	if ((stack->capacity - amount) >= 0) {
+		stack_flush(stack);
+		stack->capacity -= amount;
+	}
 }
 
 void* stack_allocate(struct Stack* stack, int64_t size)

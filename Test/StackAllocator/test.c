@@ -65,6 +65,17 @@ int main(int argc, char** argv)
 	assert(stack.size == 100 * sizeof(int32_t));
 	printf("Stack Allocation[6] OK.\n");
 
+	stack_shrink(&stack, 900);
+	arr5 = stack_allocate(&stack, 101);
+	assert(arr5 == NULL);
+	assert(stack.size == 0);
+	arr5 = stack_allocate(&stack, 80);
+	assert(arr5 != NULL);
+	assert(stack.size == 80);
+	printf("Stack Shrink OK.\n");
+	
+
+
 	printf("Everything OK.\n");
 
 	free(buffer);
