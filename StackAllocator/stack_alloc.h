@@ -24,6 +24,7 @@ struct Stack {
 struct Stack stack_create(byte* buffer, int64_t size, bool initZero);
 void* stack_allocate(struct Stack* stack, int64_t size);
 void stack_pop(struct Stack* stack);
+void stack_flush(struct Stack* stack);
 
 // Api implementation
 #ifdef STACK_ALLOC_IMPELEMENTATION
@@ -103,6 +104,13 @@ void stack_pop(struct Stack* stack)
 	stack->size -= head.size;
 	stack->offset = (int64_t) stack->currHeader - (int64_t) stack->buff;
 	stack->currHeader = head.pre;
+}
+
+void stack_flush(struct Stack* stack)
+{
+	stack->currHeader = NULL;
+	stack->offset = 0;
+	stack->size = 0;
 }
 
 #endif // STACK_ALLOC_IMPELEMENTATION

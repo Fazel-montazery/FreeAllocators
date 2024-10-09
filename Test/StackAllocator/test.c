@@ -50,6 +50,21 @@ int main(int argc, char** argv)
 	assert(stack.currHeader == NULL);
 	printf("Stack Pop OK.\n");
 
+	int32_t* arr4 = stack_allocate(&stack, 100 * sizeof(int32_t));
+	assert(arr4 != NULL);
+	assert(stack.size == 100 * sizeof(int32_t));
+	printf("Stack Allocation[5] OK.\n");
+
+	stack_flush(&stack);
+	assert(stack.currHeader == NULL);
+	assert(stack.offset == 0);
+	printf("Stack Flush OK.\n");
+
+	int32_t* arr5 = stack_allocate(&stack, 100 * sizeof(int32_t));
+	assert(arr5 != NULL);
+	assert(stack.size == 100 * sizeof(int32_t));
+	printf("Stack Allocation[6] OK.\n");
+
 	printf("Everything OK.\n");
 
 	free(buffer);
