@@ -74,10 +74,17 @@ int main(int argc, char** argv)
 	assert(stack.size == 80);
 	printf("Stack Shrink OK.\n");
 	
-
+	byte* newBuffer = malloc(NEW_BUFF_SIZE);
+	assert(newBuffer != NULL);
+	stack_updtae_buffer(&stack, newBuffer, NEW_BUFF_SIZE, false);
+	assert(stack.buff == newBuffer);
+	assert(stack.capacity == NEW_BUFF_SIZE);
+	assert(stack.offset == 0);
+	printf("Stack Change Buffer OK.\n");
 
 	printf("Everything OK.\n");
 
 	free(buffer);
+	free(newBuffer);
 	return 0;
 }
