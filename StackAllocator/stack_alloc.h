@@ -31,7 +31,10 @@ void stack_flush(struct Stack* stack);
 // Api implementation
 #ifdef STACK_ALLOC_IMPELEMENTATION
 
+#ifndef STACK_ALLOC_NO_LOG
 #include <stdio.h>
+#endif
+
 #include <string.h>
 
 #ifndef DEFAULT_ALIGNMENT
@@ -93,7 +96,9 @@ void* stack_allocate(struct Stack* stack, int64_t size)
 	offset -= (uintptr_t) stack->buff; // Change to relative offset
 					   
 	if ((offset + size) > stack->capacity) {
+#ifndef STACK_ALLOC_NO_LOG
 		fprintf(stderr, "Stack out of space! [capacity => %li]\n", stack->capacity);
+#endif
 		return NULL;
 	}
 

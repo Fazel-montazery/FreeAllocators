@@ -27,7 +27,10 @@ void arena_flush(struct Arena* arena);
 #define DEFAULT_ALIGNMENT (2 * sizeof(void *))
 #endif
 
+#ifndef ARENA_ALLOC_NO_LOG
 #include <stdio.h>
+#endif
+
 #include <string.h>
 
 static uintptr_t align_forward(uintptr_t ptr, int64_t align) 
@@ -81,7 +84,9 @@ void* arena_allocate(struct Arena* arena, int64_t size)
 	offset -= (uintptr_t) arena->buff; // Change to relative offset
 
 	if (offset + size > arena->capacity) {
+#ifndef ARENA_ALLOC_NO_LOG
 		fprintf(stderr, "Arena out of space! [capacity => %li]\n", arena->capacity);
+#endif
 		return NULL;
 	}
 
