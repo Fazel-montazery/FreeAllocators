@@ -25,6 +25,7 @@ struct Stack stack_create(byte* buffer, int64_t size, bool initZero);
 void stack_shrink(struct Stack* stack, int64_t amount);
 void stack_updtae_buffer(struct Stack* stack, byte* newBuffer, int64_t newSize, bool initZero);
 void* stack_allocate(struct Stack* stack, int64_t size);
+void* stack_allocate_align(struct Stack* stack, int64_t size, int64_t alignment);
 void stack_pop(struct Stack* stack);
 void stack_flush(struct Stack* stack);
 
@@ -88,7 +89,7 @@ void stack_updtae_buffer(struct Stack* stack, byte* newBuffer, int64_t newSize, 
 	stack->capacity = newSize;
 }
 
-void* stack_allocate(struct Stack* stack, int64_t size)
+void* stack_allocate_align(struct Stack* stack, int64_t size, int64_t alignment)
 {
 	uintptr_t curr_ptr = (uintptr_t) stack->buff + (uintptr_t) stack->offset + (uintptr_t) HEADER_SIZE;
 	uintptr_t offset = align_forward(curr_ptr, DEFAULT_ALIGNMENT);
@@ -116,6 +117,11 @@ void* stack_allocate(struct Stack* stack, int64_t size)
 	stack->offset = offset + size;
 
 	return ptr;
+}
+
+void* stack_allocate(struct Stack* stack, int64_t size) 
+{
+	return stack_allocate_align(stack, size, DEFAULT_ALIGNMENT);
 }
 
 void stack_pop(struct Stack* stack)

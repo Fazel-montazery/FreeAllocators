@@ -18,6 +18,7 @@ struct Arena arena_create(byte* buffer, int64_t size, bool initZero);
 void arena_shrink(struct Arena* arena, int64_t amount); // Just shrinks the workable memory (not returning to OS)
 void arena_update_buffer(struct Arena* arena, byte* newBuffer, int64_t newSize, bool initZero);
 void* arena_allocate(struct Arena* arena, int64_t size);
+void* arena_allocate_align(struct Arena* arena, int64_t size, int64_t alignment);
 void arena_flush(struct Arena* arena);
 
 // Api implementation
@@ -77,10 +78,10 @@ void arena_update_buffer(struct Arena* arena, byte* newBuffer, int64_t newSize, 
 	arena->offset = 0;
 }
 
-void* arena_allocate(struct Arena* arena, int64_t size)
+void* arena_allocate_align(struct Arena* arena, int64_t size, int64_t alignment)
 {
 	uintptr_t curr_ptr = (uintptr_t) arena->buff + (uintptr_t) arena->offset;
-	uintptr_t offset = align_forward(curr_ptr, DEFAULT_ALIGNMENT);
+	uintptr_t offset = align_forward(curr_ptr, alignment);
 	offset -= (uintptr_t) arena->buff; // Change to relative offset
 
 	if (offset + size > arena->capacity) {
@@ -95,6 +96,11 @@ void* arena_allocate(struct Arena* arena, int64_t size)
 	arena->size += size;
 
 	return ptr;
+}
+
+void* arena_allocate(struct Arena* arena, int64_t size)
+{
+	return arena_allocate_align(arena, size, DEFAULT_ALIGNMENT);
 }
 
 void arena_flush(struct Arena* arena)
