@@ -34,6 +34,41 @@ void arena_flush(struct Arena* arena);
 
 #include <string.h>
 
+#ifdef _WIN32
+#include <windows.h>
+#else
+#include <sys/mman.h>
+#include <unistd.h>
+#endif
+
+static void* mem_reserve(size_t size, bool zeroOut)
+{
+#ifdef _WIN32
+	if (zeroOut)
+		return VirtualAlloc(NULL, size, MEM_RESERVE | MEM_COMMIT, PAGE_READWRITE);
+	else
+		return VirtualAlloc(NULL, size, MEM_RESERVE, PAGE_READWRITE);
+#else
+	if (zeroOut) {
+		void* ptr;
+		if(!(ptr = mmap(NULL, size, PROT_READ | PROT_WRITE, MAP_PRIVATE | MAP_ANONYMOUS, -1, 0)))
+			return NULL;
+		return memset(ptr, 0, size);
+	} else {
+		return mmap(NULL, size, PROT_READ | PROT_WRITE, MAP_PRIVATE | MAP_ANONYMOUS, -1, 0);
+	}
+#endif
+}
+
+static void mem_free(void* ptr, size_t size)
+{
+#ifdef _WIN32
+	VirtualFree(ptr, 0, MEM_RELEASE);
+#else
+	munmap(ptr, size);
+#endif
+}
+
 static uintptr_t align_forward(uintptr_t ptr, int64_t align) 
 {
 	uintptr_t p, a, modulo;
