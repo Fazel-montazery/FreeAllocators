@@ -22,6 +22,7 @@ struct Pool {
 // Api declaration
 bool pool_create_align(struct Pool* p, byte* buffer, int64_t bufferSize, int64_t chunkSize, uintptr_t chunkAlignment, bool initZero);
 bool pool_create(struct Pool* p, byte* buffer, int64_t bufferSize, int64_t chunkSize, bool initZero);
+void* pool_alloc(struct Pool *p);
 void pool_flush(struct Pool* pool);
 
 // Api implementation
@@ -85,6 +86,21 @@ bool pool_create_align(struct Pool* p, byte* buffer, int64_t bufferSize, int64_t
 
 bool pool_create(struct Pool* p, byte* buffer, int64_t bufferSize, int64_t chunkSize, bool initZero) {
 	return pool_create_align(p, buffer, bufferSize, chunkSize, DEFAULT_ALIGNMENT, initZero);
+}
+
+void* pool_alloc(struct Pool *p)
+{
+	struct ChunkHeader* ptr = p->head;
+
+	if (!ptr) {
+#ifndef POOL_ALLOC_NO_LOG
+		fprintf(stderr, "No free memory available on the pool.\n");
+#endif
+		return NULL;
+	}
+
+	p->head = p->head->nextFree;
+	return ptr;
 }
 
 void pool_flush(struct Pool* pool)
