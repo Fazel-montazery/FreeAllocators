@@ -1,4 +1,5 @@
 #define ARENA_ALLOC_IMPELEMENTATION
+#define ARENA_ALLOC_NO_LOG
 #include "../../ArenaAllocator/arena_alloc.h"
 
 #include <stdio.h>
@@ -48,6 +49,16 @@ int main(int argc, char** argv)
 	arena_shrink(&arena, 850);
 	assert(arena.capacity == 750);
 	printf("Arena shrink[2] OK.\n");
+
+	assert(arena_update_buffer(&arena, NEW_BUFF_SIZE, false) == SUCCESS);
+	assert(arena.offset == 0);
+	assert(arena.capacity == NEW_BUFF_SIZE);
+	printf("Arena Buffer Change OK.\n");
+
+	int32_t* arr5 = arena_allocate(&arena, sizeof(int32_t) * 400);
+	assert(arr5 != NULL);
+	assert(arena.size == (sizeof(int32_t) * 400));
+	printf("Arena Allocation[5] OK.\n");
 
 	arena_destroy(&arena);
 	assert(arena.size == -1);

@@ -22,7 +22,7 @@ struct Arena {
 // Api declaration
 State arena_create(struct Arena* arena, int64_t size, bool initZero);
 void arena_shrink(struct Arena* arena, int64_t amount); // Just shrinks the workable memory (not returning to OS)
-void arena_update_buffer(struct Arena* arena, byte* newBuffer, int64_t newSize, bool initZero);
+State arena_update_buffer(struct Arena* arena, int64_t newSize, bool initZero);
 void* arena_allocate(struct Arena* arena, int64_t size);
 void* arena_allocate_align(struct Arena* arena, int64_t size, int64_t alignment);
 void arena_flush(struct Arena* arena);
@@ -119,13 +119,18 @@ void arena_shrink(struct Arena* arena, int64_t amount)
 	}
 }
 
-void arena_update_buffer(struct Arena* arena, byte* newBuffer, int64_t newSize, bool initZero)
+State arena_update_buffer(struct Arena* arena, int64_t newSize, bool initZero)
 {
-	if (initZero) memset(newBuffer, 0, newSize);
+	byte* newBuffer = mem_reserve(newSize, initZero);
+	if (!newBuffer)
+		return ERROR_MEMORY_RESERVATION;
+
+	mem_free(arena->buff, arena->capacity);
 	arena->buff = newBuffer;
 	arena->capacity = newSize;
 	arena->size = 0;
 	arena->offset = 0;
+	return SUCCESS;
 }
 
 void* arena_allocate_align(struct Arena* arena, int64_t size, int64_t alignment)
