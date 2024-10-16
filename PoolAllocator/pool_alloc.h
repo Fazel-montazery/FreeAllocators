@@ -53,14 +53,17 @@ static void* mem_reserve(size_t size, bool zeroOut)
 	else
 		return VirtualAlloc(NULL, size, MEM_RESERVE, PAGE_READWRITE);
 #else
-	if (zeroOut) {
-		void* ptr;
-		if(!(ptr = mmap(NULL, size, PROT_READ | PROT_WRITE, MAP_PRIVATE | MAP_ANONYMOUS, -1, 0)))
-			return NULL;
-		return memset(ptr, 0, size);
-	} else {
-		return mmap(NULL, size, PROT_READ | PROT_WRITE, MAP_PRIVATE | MAP_ANONYMOUS, -1, 0);
-	}
+	void* ptr;
+	#if defined __APPLE__ && defined __MACH__
+        int flags = MAP_PRIVATE | MAP_ANON;
+    	#else
+        int flags = MAP_PRIVATE | MAP_ANONYMOUS;
+    	#endif
+
+	if((ptr = mmap(NULL, size, PROT_READ | PROT_WRITE, flags, -1, 0)) == MAP_FAILED)
+		return NULL;
+
+	return ptr;
 #endif
 }
 

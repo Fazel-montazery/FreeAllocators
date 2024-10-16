@@ -5,6 +5,12 @@
 
 typedef unsigned char byte;
 
+// States
+typedef enum {
+	SUCCESS,
+	ERROR_MEMORY_RESERVATION
+} State;
+
 // Arena structure
 struct Arena {
 	byte* buff;
@@ -14,12 +20,13 @@ struct Arena {
 };
 
 // Api declaration
-struct Arena arena_create(byte* buffer, int64_t size, bool initZero);
+State arena_create(struct Arena* arena, int64_t size, bool initZero);
 void arena_shrink(struct Arena* arena, int64_t amount); // Just shrinks the workable memory (not returning to OS)
 void arena_update_buffer(struct Arena* arena, byte* newBuffer, int64_t newSize, bool initZero);
 void* arena_allocate(struct Arena* arena, int64_t size);
 void* arena_allocate_align(struct Arena* arena, int64_t size, int64_t alignment);
 void arena_flush(struct Arena* arena);
+void arena_destroy(struct Arena* arena);
 
 // Api implementation
 #ifdef ARENA_ALLOC_IMPELEMENTATION
@@ -49,14 +56,17 @@ static void* mem_reserve(size_t size, bool zeroOut)
 	else
 		return VirtualAlloc(NULL, size, MEM_RESERVE, PAGE_READWRITE);
 #else
-	if (zeroOut) {
-		void* ptr;
-		if(!(ptr = mmap(NULL, size, PROT_READ | PROT_WRITE, MAP_PRIVATE | MAP_ANONYMOUS, -1, 0)))
-			return NULL;
-		return memset(ptr, 0, size);
-	} else {
-		return mmap(NULL, size, PROT_READ | PROT_WRITE, MAP_PRIVATE | MAP_ANONYMOUS, -1, 0);
-	}
+	void* ptr;
+	#if defined __APPLE__ && defined __MACH__
+        int flags = MAP_PRIVATE | MAP_ANON;
+    	#else
+        int flags = MAP_PRIVATE | MAP_ANONYMOUS;
+    	#endif
+
+	if((ptr = mmap(NULL, size, PROT_READ | PROT_WRITE, flags, -1, 0)) == MAP_FAILED)
+		return NULL;
+
+	return ptr;
 #endif
 }
 
@@ -84,15 +94,20 @@ static uintptr_t align_forward(uintptr_t ptr, int64_t align)
 	return p;
 }
 
-struct Arena arena_create(byte* buffer, int64_t size, bool initZero)
+State arena_create(struct Arena* arena, int64_t size, bool initZero)
 {
-	if (initZero) memset(buffer, 0, size);
-	return (struct Arena) {
+	byte* buffer = mem_reserve((size_t) size, initZero);
+	if (!buffer)
+		return ERROR_MEMORY_RESERVATION;
+
+	struct Arena a = {
 		.buff = buffer,
 		.size = 0,
 		.offset = 0,
 		.capacity = size
 	};
+
+	*arena = a;
 }
 
 void arena_shrink(struct Arena* arena, int64_t amount)
@@ -142,6 +157,14 @@ void arena_flush(struct Arena* arena)
 {
 	arena->size = 0;
 	arena->offset = 0;
+}
+
+void arena_destroy(struct Arena* arena)
+{
+	mem_free(arena->buff, arena->capacity);
+	arena->capacity = -1;
+	arena->size = -1;
+	arena->offset = -1;		
 }
 
 #endif // ARENA_ALLOC_IMPELEMENTATION
