@@ -35,6 +35,10 @@ void arena_destroy(struct Arena* arena);
 #define DEFAULT_ALIGNMENT (2 * sizeof(void *))
 #endif
 
+#ifndef EXTRA_CAP
+#define EXTRA_CAP 1024 // for extra paddings
+#endif
+
 #ifndef ARENA_ALLOC_NO_LOG
 #include <stdio.h>
 #endif
@@ -96,7 +100,7 @@ static uintptr_t align_forward(uintptr_t ptr, int64_t align)
 
 State arena_create(struct Arena* arena, int64_t size, bool initZero)
 {
-	byte* buffer = mem_reserve((size_t) size, initZero);
+	byte* buffer = mem_reserve((size_t) size + EXTRA_CAP, initZero);
 	if (!buffer)
 		return ERROR_MEMORY_RESERVATION;
 
@@ -104,7 +108,7 @@ State arena_create(struct Arena* arena, int64_t size, bool initZero)
 		.buff = buffer,
 		.size = 0,
 		.offset = 0,
-		.capacity = size
+		.capacity = size + EXTRA_CAP
 	};
 
 	*arena = a;
@@ -112,7 +116,7 @@ State arena_create(struct Arena* arena, int64_t size, bool initZero)
 
 void arena_shrink(struct Arena* arena, int64_t amount)
 {
-	if ((arena->capacity - amount) >= 0) {
+	if (((arena->capacity - EXTRA_CAP) - amount) >= 0) {
 		arena->size = 0;
 		arena->offset = 0;
 		arena->capacity -= amount;
@@ -121,13 +125,13 @@ void arena_shrink(struct Arena* arena, int64_t amount)
 
 State arena_update_buffer(struct Arena* arena, int64_t newSize, bool initZero)
 {
-	byte* newBuffer = mem_reserve(newSize, initZero);
+	byte* newBuffer = mem_reserve((size_t) newSize + EXTRA_CAP, initZero);
 	if (!newBuffer)
 		return ERROR_MEMORY_RESERVATION;
 
 	mem_free(arena->buff, arena->capacity);
 	arena->buff = newBuffer;
-	arena->capacity = newSize;
+	arena->capacity = newSize + EXTRA_CAP;
 	arena->size = 0;
 	arena->offset = 0;
 	return SUCCESS;
