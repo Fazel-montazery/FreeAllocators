@@ -12,10 +12,11 @@
 int main(int argc, char** argv)
 {
 	struct Arena arena;
-	assert(arena_create(&arena, BUFF_SIZE, false) != ERROR_MEMORY_RESERVATION);
-	assert(arena.capacity == BUFF_SIZE);
+	assert(arena_create(&arena, BUFF_SIZE, false) == SUCCESS);
+	assert(arena.capacity == BUFF_SIZE + EXTRA_CAP);
 	assert(arena.size == 0);
-	memset(arena.buff, 0, BUFF_SIZE);
+	memset(arena.buff, '*', arena.capacity);
+	for (int i = 0; i < arena.capacity; i++) assert(arena.buff[i] == '*');
 	printf("Arena Creation OK.\n");
 
 	int32_t* arr1 = arena_allocate(&arena, sizeof(int32_t) * 100);
@@ -43,16 +44,16 @@ int main(int argc, char** argv)
 	printf("Arena Allocation[4] OK.\n");
 
 	arena_shrink(&arena, 250);
-	assert(arena.capacity == 750);
+	assert(arena.capacity == 750 + EXTRA_CAP);
 	printf("Arena shrink[1] OK.\n");
 
 	arena_shrink(&arena, 850);
-	assert(arena.capacity == 750);
+	assert(arena.capacity == 750 + EXTRA_CAP);
 	printf("Arena shrink[2] OK.\n");
 
 	assert(arena_update_buffer(&arena, NEW_BUFF_SIZE, false) == SUCCESS);
 	assert(arena.offset == 0);
-	assert(arena.capacity == NEW_BUFF_SIZE);
+	assert(arena.capacity == NEW_BUFF_SIZE + EXTRA_CAP);
 	printf("Arena Buffer Change OK.\n");
 
 	int32_t* arr5 = arena_allocate(&arena, sizeof(int32_t) * 400);

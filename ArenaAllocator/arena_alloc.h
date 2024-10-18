@@ -17,11 +17,14 @@ struct Arena {
 	int64_t size; // offset without padding
 	int64_t offset;
 	int64_t capacity;
+	int64_t extra;
 };
 
 // Api declaration
 State arena_create(struct Arena* arena, int64_t size, bool initZero);
+State arena_create_extra(struct Arena* arena, int64_t size, int64_t extra, bool initZero);
 void arena_shrink(struct Arena* arena, int64_t amount); // Just shrinks the workable memory (not returning to OS)
+State arena_update_buffer_extra(struct Arena* arena, int64_t newSize, int64_t extra, bool initZero);
 State arena_update_buffer(struct Arena* arena, int64_t newSize, bool initZero);
 void* arena_allocate(struct Arena* arena, int64_t size);
 void* arena_allocate_align(struct Arena* arena, int64_t size, int64_t alignment);
@@ -98,9 +101,9 @@ static uintptr_t align_forward(uintptr_t ptr, int64_t align)
 	return p;
 }
 
-State arena_create(struct Arena* arena, int64_t size, bool initZero)
+State arena_create_extra(struct Arena* arena, int64_t size, int64_t extra, bool initZero)
 {
-	byte* buffer = mem_reserve((size_t) size + EXTRA_CAP, initZero);
+	byte* buffer = mem_reserve((size_t) size + (size_t) extra, initZero);
 	if (!buffer)
 		return ERROR_MEMORY_RESERVATION;
 
@@ -108,33 +111,46 @@ State arena_create(struct Arena* arena, int64_t size, bool initZero)
 		.buff = buffer,
 		.size = 0,
 		.offset = 0,
-		.capacity = size + EXTRA_CAP
+		.capacity = size + extra,
+		.extra = extra
 	};
 
 	*arena = a;
+	return SUCCESS;
+}
+
+State arena_create(struct Arena* arena, int64_t size, bool initZero)
+{
+	return arena_create_extra(arena, size, EXTRA_CAP, initZero);
 }
 
 void arena_shrink(struct Arena* arena, int64_t amount)
 {
-	if (((arena->capacity - EXTRA_CAP) - amount) >= 0) {
+	if (((arena->capacity - arena->extra) - amount) >= 0) {
 		arena->size = 0;
 		arena->offset = 0;
 		arena->capacity -= amount;
 	}
 }
 
-State arena_update_buffer(struct Arena* arena, int64_t newSize, bool initZero)
+State arena_update_buffer_extra(struct Arena* arena, int64_t newSize, int64_t extra, bool initZero)
 {
-	byte* newBuffer = mem_reserve((size_t) newSize + EXTRA_CAP, initZero);
+	byte* newBuffer = mem_reserve((size_t) newSize + (size_t) extra, initZero);
 	if (!newBuffer)
 		return ERROR_MEMORY_RESERVATION;
 
 	mem_free(arena->buff, arena->capacity);
 	arena->buff = newBuffer;
-	arena->capacity = newSize + EXTRA_CAP;
+	arena->capacity = newSize + extra;
+	arena->extra = extra;
 	arena->size = 0;
 	arena->offset = 0;
 	return SUCCESS;
+}
+
+State arena_update_buffer(struct Arena* arena, int64_t newSize, bool initZero)
+{
+	return arena_update_buffer_extra(arena, newSize, EXTRA_CAP, initZero);
 }
 
 void* arena_allocate_align(struct Arena* arena, int64_t size, int64_t alignment)
@@ -143,7 +159,7 @@ void* arena_allocate_align(struct Arena* arena, int64_t size, int64_t alignment)
 	uintptr_t offset = align_forward(curr_ptr, alignment);
 	offset -= (uintptr_t) arena->buff; // Change to relative offset
 
-	if (offset + size > arena->capacity) {
+	if (offset + size > (arena->capacity - arena->extra)) {
 #ifndef ARENA_ALLOC_NO_LOG
 		fprintf(stderr, "Arena out of space! [capacity => %li]\n", arena->capacity);
 #endif
@@ -172,8 +188,9 @@ void arena_destroy(struct Arena* arena)
 {
 	mem_free(arena->buff, arena->capacity);
 	arena->capacity = -1;
+	arena->extra = -1;
 	arena->size = -1;
-	arena->offset = -1;		
+	arena->offset = -1;
 }
 
 #endif // ARENA_ALLOC_IMPELEMENTATION
