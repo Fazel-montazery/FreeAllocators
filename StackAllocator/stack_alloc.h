@@ -138,7 +138,7 @@ State stack_create(struct Stack* stack, int64_t size, bool initZero)
 
 void stack_shrink(struct Stack* stack, int64_t amount)
 {
-	if ((stack->capacity - amount) >= 0) {
+	if (((stack->capacity - stack->extra) - amount) >= 0) {
 		stack_flush(stack);
 		stack->capacity -= amount;
 	}
@@ -159,7 +159,7 @@ void* stack_allocate_align(struct Stack* stack, int64_t size, int64_t alignment)
 	
 	offset -= (uintptr_t) stack->buff; // Change to relative offset
 					   
-	if ((offset + size) > stack->capacity) {
+	if ((offset + size) > (stack->capacity - stack->extra)) {
 #ifndef STACK_ALLOC_NO_LOG
 		fprintf(stderr, "Stack out of space! [capacity => %li]\n", stack->capacity);
 #endif

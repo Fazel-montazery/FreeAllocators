@@ -159,7 +159,7 @@ void* arena_allocate_align(struct Arena* arena, int64_t size, int64_t alignment)
 	uintptr_t offset = align_forward(curr_ptr, alignment);
 	offset -= (uintptr_t) arena->buff; // Change to relative offset
 
-	if (offset + size > (arena->capacity - arena->extra)) {
+	if ((offset + size) > (arena->capacity - arena->extra)) {
 #ifndef ARENA_ALLOC_NO_LOG
 		fprintf(stderr, "Arena out of space! [capacity => %li]\n", arena->capacity);
 #endif
