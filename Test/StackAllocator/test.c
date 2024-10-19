@@ -11,13 +11,10 @@
 
 int main(int argc, char** argv)
 {
-	byte* buffer = malloc(BUFF_SIZE);
-	assert(buffer != NULL);
-
-	struct Stack stack = stack_create(buffer, BUFF_SIZE, false);
-	assert(stack.buff == buffer);
+	struct Stack stack;
+	assert(stack_create(&stack, BUFF_SIZE, false) == SUCCESS);
 	assert(stack.offset == 0);
-	assert(stack.capacity == BUFF_SIZE);
+	assert(stack.capacity == BUFF_SIZE + stack.extra);
 	printf("Stack Creation OK.\n");
 
 	int32_t* arr1 = stack_allocate(&stack, 100 * sizeof(int32_t));
@@ -82,9 +79,11 @@ int main(int argc, char** argv)
 	assert(stack.offset == 0);
 	printf("Stack Change Buffer OK.\n");
 
+	stack_destroy(&stack);
+	assert(stack.offset == -1);
+	printf("Stack Destruction OK.\n");
+
 	printf("Everything OK.\n");
 
-	free(buffer);
-	free(newBuffer);
 	return 0;
 }

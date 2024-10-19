@@ -36,6 +36,7 @@ void* stack_allocate(struct Stack* stack, int64_t size);
 void* stack_allocate_align(struct Stack* stack, int64_t size, int64_t alignment);
 void stack_pop(struct Stack* stack);
 void stack_flush(struct Stack* stack);
+void stack_destroy(struct Stack* stack);
 
 // Api implementation
 #ifdef STACK_ALLOC_IMPELEMENTATION
@@ -202,6 +203,16 @@ void stack_flush(struct Stack* stack)
 	stack->currHeader = NULL;
 	stack->offset = 0;
 	stack->size = 0;
+}
+
+void stack_destroy(struct Stack* stack)
+{
+	mem_free(stack->buff, stack->capacity);
+	stack->capacity = -1;
+	stack->size = -1;
+	stack->offset = -1;
+	stack->extra = -1;
+	stack->currHeader = NULL;
 }
 
 #endif // STACK_ALLOC_IMPELEMENTATION
