@@ -5,6 +5,12 @@
 
 typedef unsigned char byte;
 
+// States
+typedef enum {
+	SUCCESS,
+	ERROR_MEMORY_RESERVATION
+} State;
+
 // Stack Header structure
 typedef struct HEADER_STRUCT {
 	int32_t size;
@@ -18,10 +24,12 @@ struct Stack {
 	int64_t size; // offset without padding and headers
 	int64_t offset;
 	int64_t capacity;
+	int64_t extra;
 };
 
 // Api declaration
-struct Stack stack_create(byte* buffer, int64_t size, bool initZero);
+State stack_create(struct Stack* stack, int64_t size, bool initZero);
+State stack_create_extra(struct Stack* stack, int64_t size, int64_t extra, bool initZero);
 void stack_shrink(struct Stack* stack, int64_t amount);
 void stack_updtae_buffer(struct Stack* stack, byte* newBuffer, int64_t newSize, bool initZero);
 void* stack_allocate(struct Stack* stack, int64_t size);
@@ -40,6 +48,10 @@ void stack_flush(struct Stack* stack);
 
 #ifndef DEFAULT_ALIGNMENT
 #define DEFAULT_ALIGNMENT (2 * sizeof(void *))
+#endif
+
+#ifndef EXTRA_CAP
+#define EXTRA_CAP 1024 // for extra padding
 #endif
 
 #ifndef HEADER_SIZE
@@ -99,16 +111,28 @@ static uintptr_t align_forward(uintptr_t ptr, int64_t align)
 	return p;
 }
 
-struct Stack stack_create(byte* buffer, int64_t size, bool initZero)
+State stack_create_extra(struct Stack* stack, int64_t size, int64_t extra, bool initZero)
 {
-	if (initZero) memset(buffer, 0, size);
-	return (struct Stack) {
+	byte* buffer = mem_reserve((size_t) size + (size_t) extra, initZero);
+	if (!buffer)
+		return ERROR_MEMORY_RESERVATION;
+
+	struct Stack s = {
 		.buff = buffer,
 		.currHeader = NULL,
 		.size = 0,
 		.offset = 0,
-		.capacity = size
+		.capacity = size + extra,
+		.extra = extra
 	};
+
+	*stack = s;
+	return SUCCESS;
+}
+
+State stack_create(struct Stack* stack, int64_t size, bool initZero)
+{
+	return stack_create_extra(stack, size, EXTRA_CAP, initZero);
 }
 
 void stack_shrink(struct Stack* stack, int64_t amount)
