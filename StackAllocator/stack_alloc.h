@@ -31,7 +31,8 @@ struct Stack {
 State stack_create(struct Stack* stack, int64_t size, bool initZero);
 State stack_create_extra(struct Stack* stack, int64_t size, int64_t extra, bool initZero);
 void stack_shrink(struct Stack* stack, int64_t amount);
-void stack_updtae_buffer(struct Stack* stack, byte* newBuffer, int64_t newSize, bool initZero);
+State stack_update_buffer(struct Stack* stack, int64_t newSize, bool initZero);
+State stack_update_buffer_extra(struct Stack* stack, int64_t newSize, int64_t extra, bool initZero);
 void* stack_allocate(struct Stack* stack, int64_t size);
 void* stack_allocate_align(struct Stack* stack, int64_t size, int64_t alignment);
 void stack_pop(struct Stack* stack);
@@ -144,12 +145,23 @@ void stack_shrink(struct Stack* stack, int64_t amount)
 	}
 }
 
-void stack_updtae_buffer(struct Stack* stack, byte* newBuffer, int64_t newSize, bool initZero)
+State stack_update_buffer_extra(struct Stack* stack, int64_t newSize, int64_t extra, bool initZero)
 {
-	if (initZero) memset(newBuffer, 0, newSize);
+	byte* newBuffer = mem_reserve((size_t) newSize + (size_t) extra, initZero);
+	if (!newBuffer)
+		return ERROR_MEMORY_RESERVATION;
+
+	mem_free(stack->buff, stack->capacity);
 	stack_flush(stack);
 	stack->buff = newBuffer;
 	stack->capacity = newSize;
+	stack->extra = extra;
+	return SUCCESS;
+}
+
+State stack_update_buffer(struct Stack* stack, int64_t newSize, bool initZero)
+{
+	return stack_update_buffer_extra(stack, newSize, EXTRA_CAP, initZero);
 }
 
 void* stack_allocate_align(struct Stack* stack, int64_t size, int64_t alignment)
