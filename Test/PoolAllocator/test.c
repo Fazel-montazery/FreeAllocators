@@ -20,7 +20,7 @@ int main(int argc, char** argv)
 	byte* buffer = malloc(BUFF_SIZE);
 	
 	struct Pool pool;
-	assert(pool_create(&pool, buffer, BUFF_SIZE, sizeof(MyStruct), false));
+	assert(pool_create(&pool, buffer, BUFF_SIZE, sizeof(MyStruct), false) == SUCCESS);
 	assert(pool.buff == buffer);
 	printf("Pool Creation OK.\n");
 

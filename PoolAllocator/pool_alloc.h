@@ -5,6 +5,13 @@
 
 typedef unsigned char byte;
 
+// States
+typedef enum {
+	SUCCESS,
+	ERROR_MEMORY_RESERVATION,
+	ERROR_CHUNK_SIZE
+} State;
+
 // Header structure
 struct ChunkHeader {
 	struct ChunkHeader* nextFree;
@@ -20,8 +27,8 @@ struct Pool {
 };
 
 // Api declaration
-bool pool_create_align(struct Pool* p, byte* buffer, int64_t bufferSize, int64_t chunkSize, uintptr_t chunkAlignment, bool initZero);
-bool pool_create(struct Pool* p, byte* buffer, int64_t bufferSize, int64_t chunkSize, bool initZero);
+State pool_create_align(struct Pool* p, byte* buffer, int64_t bufferSize, int64_t chunkSize, uintptr_t chunkAlignment, bool initZero);
+State pool_create(struct Pool* p, byte* buffer, int64_t bufferSize, int64_t chunkSize, bool initZero);
 void* pool_alloc(struct Pool *p);
 void pool_flush(struct Pool* pool);
 
@@ -91,7 +98,7 @@ static uintptr_t align_forward(uintptr_t ptr, uintptr_t align)
 	return p;
 }
 
-bool pool_create_align(struct Pool* p, byte* buffer, int64_t bufferSize, int64_t chunkSize, uintptr_t chunkAlignment, bool initZero)
+State pool_create_align(struct Pool* p, byte* buffer, int64_t bufferSize, int64_t chunkSize, uintptr_t chunkAlignment, bool initZero)
 {
 	uintptr_t initStart = (uintptr_t) buffer;
 	uintptr_t start = align_forward(initStart, (uintptr_t) chunkAlignment);
@@ -102,14 +109,14 @@ bool pool_create_align(struct Pool* p, byte* buffer, int64_t bufferSize, int64_t
 #ifndef POOL_ALLOC_NO_LOG
 		fprintf(stderr, "Chunk size is too small.\n");
 #endif
-		return false;
+		return ERROR_CHUNK_SIZE;
 	}
 
 	if (bufferSize < chunkSize) {
 #ifndef POOL_ALLOC_NO_LOG
 		fprintf(stderr, "Buffer size is too small.\n");
 #endif
-		return false;
+		return ERROR_CHUNK_SIZE;
 	}
 
 	if (initZero) memset(buffer, 0, bufferSize);
@@ -120,9 +127,10 @@ bool pool_create_align(struct Pool* p, byte* buffer, int64_t bufferSize, int64_t
 	p->head = NULL;
 
 	pool_flush(p);
+	return SUCCESS;
 }
 
-bool pool_create(struct Pool* p, byte* buffer, int64_t bufferSize, int64_t chunkSize, bool initZero) {
+State pool_create(struct Pool* p, byte* buffer, int64_t bufferSize, int64_t chunkSize, bool initZero) {
 	return pool_create_align(p, buffer, bufferSize, chunkSize, DEFAULT_ALIGNMENT, initZero);
 }
 
