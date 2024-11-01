@@ -8,6 +8,7 @@ for example:
 #define ARENA_ALLOC_IMPLEMENTATION
 #include "arena_alloc.h"
 ```
+You could also define `[AllocatorName]_ALLOC_NO_LOG` in order to get rid of the debug messages.
 
 ## Examples
 See test files for more info.
