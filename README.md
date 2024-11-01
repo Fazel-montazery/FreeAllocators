@@ -10,6 +10,8 @@ for example:
 ```
 You could also define `[AllocatorName]_ALLOC_NO_LOG` in order to get rid of the debug messages.
 
+**Notice:** Like `malloc` and `free` in the libc, this implementation does not guarantee correct behavior if a pointer is freed multiple times or if a NULL pointer is freed.
+
 ## Examples
 See test files for more info.
 
