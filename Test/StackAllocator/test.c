@@ -12,7 +12,7 @@
 
 int main(int argc, char** argv)
 {
-	struct Stack stack;
+	struct Stack stack = {0};
 	assert(stack_create(&stack, BUFF_SIZE, false) == SUCCESS);
 	assert(stack.offset == 0);
 	assert(stack.capacity == BUFF_SIZE + stack.extra);
