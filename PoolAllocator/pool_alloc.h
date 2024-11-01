@@ -24,6 +24,8 @@ struct Pool {
 // Api declaration
 State pool_create(struct Pool* pool, int64_t chunkCount, size_t chunkSize, bool initZero);
 State pool_create_align(struct Pool* pool, int64_t chunkCount, size_t chunkSize, int64_t alignment, bool initZero);
+void* pool_allocate(struct Pool* pool);
+void pool_free(struct Pool* pool, void* ptr);
 void pool_destroy(struct Pool* pool);
 
 // Api implementation
@@ -123,6 +125,16 @@ State pool_create_align(struct Pool* pool, int64_t chunkCount, size_t chunkSize,
 State pool_create(struct Pool* pool, int64_t chunkCount, size_t chunkSize, bool initZero)
 {
 	return pool_create_align(pool, chunkCount, chunkSize, DEFAULT_ALIGNMENT, initZero);
+}
+
+void* pool_allocate(struct Pool* pool)
+{
+	return (pool->chunkCount == pool->chunkAllocCount) ? NULL : (void*) pool->trackingStack[pool->chunkAllocCount++];
+}
+
+void pool_free(struct Pool* pool, void* ptr)
+{
+	pool->trackingStack[--pool->chunkAllocCount] = (uintptr_t) ptr;
 }
 
 void pool_destroy(struct Pool* pool)
