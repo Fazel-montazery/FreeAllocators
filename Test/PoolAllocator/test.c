@@ -54,6 +54,18 @@ int main(int argc, char** argv)
 	assert(tmp == t4);
 	printf("Pool Allocation[4] OK.\n");
 
+	pool_flush(&pool);
+	assert(pool.chunkAllocCount == 0);
+	printf("Pool Flush OK.\n");
+
+	test_t* t5[5];
+	for (int i = 0; i < 5; i++) {
+		t5[i] = pool_allocate(&pool);
+		assert(t5[i] != NULL);
+	}
+	assert(pool.chunkAllocCount == 5);
+	printf("Pool Allocation[5] OK.\n");
+
 	pool_destroy(&pool);
 	assert(pool.buff == NULL);
 	assert(pool.trackingStack == NULL);

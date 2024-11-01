@@ -16,8 +16,10 @@ typedef enum {
 struct Pool {
 	byte* buff;
 	size_t capacity;
+	size_t chunkSize;
 	int64_t chunkCount;
 	int64_t chunkAllocCount;
+	int64_t alignment;
 	uintptr_t* trackingStack;
 };
 
@@ -26,6 +28,7 @@ State pool_create(struct Pool* pool, int64_t chunkCount, size_t chunkSize, bool 
 State pool_create_align(struct Pool* pool, int64_t chunkCount, size_t chunkSize, int64_t alignment, bool initZero);
 void* pool_allocate(struct Pool* pool);
 void pool_free(struct Pool* pool, void* ptr);
+void pool_flush(struct Pool* pool);
 void pool_destroy(struct Pool* pool);
 
 // Api implementation
@@ -34,12 +37,6 @@ void pool_destroy(struct Pool* pool);
 #ifndef DEFAULT_ALIGNMENT
 #define DEFAULT_ALIGNMENT (sizeof(void *))
 #endif
-
-#ifndef POOL_ALLOC_NO_LOG
-#include <stdio.h>
-#endif
-
-#include <string.h>
 
 #ifdef _WIN32
 #include <windows.h>
@@ -114,8 +111,10 @@ State pool_create_align(struct Pool* pool, int64_t chunkCount, size_t chunkSize,
 
 	p.buff = buffer;
 	p.capacity = cap;
+	p.chunkSize = chunkSize;
 	p.chunkCount = chunkCount;
 	p.chunkAllocCount = 0;
+	p.alignment = alignment;
 	p.trackingStack = trackingStack;
 
 	*pool = p;
@@ -137,12 +136,22 @@ void pool_free(struct Pool* pool, void* ptr)
 	pool->trackingStack[--pool->chunkAllocCount] = (uintptr_t) ptr;
 }
 
+void pool_flush(struct Pool* pool)
+{
+	pool->chunkAllocCount = 0;
+	uintptr_t chunkStart = align_forward((uintptr_t) pool->buff, pool->alignment);
+	for (uint64_t i = 0; i < pool->chunkCount; i++) {
+		pool->trackingStack[i] = chunkStart + (i * pool->chunkSize);
+	}
+}
+
 void pool_destroy(struct Pool* pool)
 {
 	mem_free(pool->buff, pool->capacity);
 	mem_free(pool->trackingStack, pool->chunkCount * sizeof(uintptr_t));
 	pool->buff = NULL;
 	pool->capacity = -1;
+	pool->chunkSize = -1;
 	pool->chunkCount = -1;
 	pool->chunkAllocCount = -1;
 	pool->trackingStack = NULL;
