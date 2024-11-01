@@ -40,7 +40,7 @@ void stack_flush(struct Stack* stack);
 void stack_destroy(struct Stack* stack);
 
 // Api implementation
-#ifdef STACK_ALLOC_IMPELEMENTATION
+#ifdef STACK_ALLOC_IMPLEMENTATION
 
 #ifndef STACK_ALLOC_NO_LOG
 #include <stdio.h>
@@ -227,4 +227,4 @@ void stack_destroy(struct Stack* stack)
 	stack->currHeader = NULL;
 }
 
-#endif // STACK_ALLOC_IMPELEMENTATION
+#endif // STACK_ALLOC_IMPLEMENTATION

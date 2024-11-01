@@ -1,4 +1,4 @@
-#define STACK_ALLOC_IMPELEMENTATION
+#define STACK_ALLOC_IMPLEMENTATION
 #define STACK_ALLOC_NO_LOG
 #include "../../StackAllocator/stack_alloc.h"
 

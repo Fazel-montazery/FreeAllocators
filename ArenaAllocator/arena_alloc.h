@@ -32,7 +32,7 @@ void arena_flush(struct Arena* arena);
 void arena_destroy(struct Arena* arena);
 
 // Api implementation
-#ifdef ARENA_ALLOC_IMPELEMENTATION
+#ifdef ARENA_ALLOC_IMPLEMENTATION
 
 #ifndef DEFAULT_ALIGNMENT
 #define DEFAULT_ALIGNMENT (2 * sizeof(void *))
@@ -193,4 +193,4 @@ void arena_destroy(struct Arena* arena)
 	arena->offset = -1;
 }
 
-#endif // ARENA_ALLOC_IMPELEMENTATION
+#endif // ARENA_ALLOC_IMPLEMENTATION

@@ -1,4 +1,4 @@
-#define ARENA_ALLOC_IMPELEMENTATION
+#define ARENA_ALLOC_IMPLEMENTATION
 #define ARENA_ALLOC_NO_LOG
 #include "../../ArenaAllocator/arena_alloc.h"
 

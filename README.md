@@ -5,7 +5,7 @@ A collection of cross-platform memory allocators and managers with runtime memor
 Simply define `[AllocatorName]_ALLOC_IMPLEMENTATION` in a single C file, and compile it with your project source code.
 for example:
 ```C
-#defien ARENA_ALLOC_IMPLEMENTATION
+#define ARENA_ALLOC_IMPLEMENTATION
 #include "arena_alloc.h"
 ```
 
