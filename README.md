@@ -15,5 +15,10 @@ You could also define `[AllocatorName]_ALLOC_NO_LOG` in order to get rid of the 
 ## Examples
 See test files for more info.
 
+## Resources
+[Memory Allocation Strategies(GingerBill)](https://www.gingerbill.org/series/memory-allocation-strategies/)
+[Untangling Lifetimes: The Arena Allocator(RyanFleury)](https://www.rfleury.com/p/untangling-lifetimes-the-arena-allocator)
+[CppCon 2017 JohnLakos](https://youtu.be/nZNd5FjSquk?si=8psGlYGAh-ZtXcDp)
+
 ## License
 This repo is licensed under the MIT License.
