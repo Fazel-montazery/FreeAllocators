@@ -77,10 +77,10 @@ static void* mem_reserve(size_t size, bool zeroOut)
 #else
 	void* ptr;
 	#if defined __APPLE__ && defined __MACH__
-        int flags = MAP_PRIVATE | MAP_ANON;
-    	#else
-        int flags = MAP_PRIVATE | MAP_ANONYMOUS;
-    	#endif
+	int flags = MAP_PRIVATE | MAP_ANON;
+	#else
+	int flags = MAP_PRIVATE | MAP_ANONYMOUS;
+	#endif
 
 	if((ptr = mmap(NULL, size, PROT_READ | PROT_WRITE, flags, -1, 0)) == MAP_FAILED)
 		return NULL;
@@ -98,7 +98,7 @@ static void mem_free(void* ptr, size_t size)
 #endif
 }
 
-static uintptr_t align_forward(uintptr_t ptr, int64_t align) 
+static uintptr_t align_forward(uintptr_t ptr, int64_t align)
 {
 	uintptr_t p, a, modulo;
 
@@ -168,9 +168,9 @@ void* stack_allocate_align(struct Stack* stack, int64_t size, int64_t alignment)
 {
 	uintptr_t curr_ptr = (uintptr_t) stack->buff + (uintptr_t) stack->offset + (uintptr_t) HEADER_SIZE;
 	uintptr_t offset = align_forward(curr_ptr, DEFAULT_ALIGNMENT);
-	
+
 	offset -= (uintptr_t) stack->buff; // Change to relative offset
-					   
+
 	if ((offset + size) > (stack->capacity - stack->extra)) {
 #ifndef STACK_ALLOC_NO_LOG
 		fprintf(stderr, "Stack out of space! [capacity => %li]\n", stack->capacity);
@@ -194,7 +194,7 @@ void* stack_allocate_align(struct Stack* stack, int64_t size, int64_t alignment)
 	return ptr;
 }
 
-void* stack_allocate(struct Stack* stack, int64_t size) 
+void* stack_allocate(struct Stack* stack, int64_t size)
 {
 	return stack_allocate_align(stack, size, DEFAULT_ALIGNMENT);
 }

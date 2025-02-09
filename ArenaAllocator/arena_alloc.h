@@ -65,10 +65,10 @@ static void* mem_reserve(size_t size, bool zeroOut)
 #else
 	void* ptr;
 	#if defined __APPLE__ && defined __MACH__
-        int flags = MAP_PRIVATE | MAP_ANON;
-    	#else
-        int flags = MAP_PRIVATE | MAP_ANONYMOUS;
-    	#endif
+	int flags = MAP_PRIVATE | MAP_ANON;
+	#else
+	int flags = MAP_PRIVATE | MAP_ANONYMOUS;
+	#endif
 
 	if((ptr = mmap(NULL, size, PROT_READ | PROT_WRITE, flags, -1, 0)) == MAP_FAILED)
 		return NULL;
@@ -86,7 +86,7 @@ static void mem_free(void* ptr, size_t size)
 #endif
 }
 
-static uintptr_t align_forward(uintptr_t ptr, int64_t align) 
+static uintptr_t align_forward(uintptr_t ptr, int64_t align)
 {
 	uintptr_t p, a, modulo;
 
